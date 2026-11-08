@@ -37,7 +37,7 @@ export default function CategoryTiles({ tiles }: { tiles: Tile[] }) {
               </div>
 
               <div className="absolute -bottom-4 -right-4 h-3/5 w-3/5 rotate-3 overflow-hidden rounded-2xl bg-white shadow-lg transition-transform duration-300 group-hover:rotate-0 group-hover:scale-105 md:h-2/3">
-                <ProductImage src={t.image} alt="" contain className="h-full w-full p-3" />
+                <ProductImage src={t.image} alt="" className="h-full w-full" />
               </div>
             </Link>
           )

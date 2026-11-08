@@ -15,19 +15,14 @@ export default function Hero({ image, alt }: { image?: string; alt?: string }) {
               <Link href="/products">Browse products</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full bg-background px-6">
-              <Link href="#curated">Top picks</Link>
+              <Link href={SITE.navHighlight.href}>{SITE.navHighlight.label}</Link>
             </Button>
           </div>
         </div>
 
         <div className="relative min-h-64 md:min-h-[26rem]">
           {image ? (
-            <ProductImage
-              src={image}
-              alt={alt ?? ''}
-              contain
-              className="absolute inset-0 h-full w-full p-8 mix-blend-multiply md:p-12"
-            />
+            <ProductImage src={image} alt={alt ?? ''} className="absolute inset-0 h-full w-full" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-56 w-56 rounded-full bg-gradient-to-br from-primary/30 to-primary/5" />

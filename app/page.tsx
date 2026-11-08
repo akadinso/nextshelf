@@ -1,4 +1,5 @@
 import Hero from '@/components/home/hero'
+import ShopByNeed from '@/components/home/shop-by-need'
 import CuratedSection, { TABS } from '@/components/home/curated-section'
 import CategoryTiles, { type Tile } from '@/components/home/category-tiles'
 import Testimonials, { type Testimonial } from '@/components/home/testimonials'
@@ -78,6 +79,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   return (
     <>
       <Hero image={heroProduct?.images[0]} alt={heroProduct?.name} />
+      <ShopByNeed />
       <CuratedSection activeTab={active} products={products} favouriteIds={favouriteIds} />
       <CategoryTiles tiles={tiles} />
       <Testimonials reviews={reviews} />

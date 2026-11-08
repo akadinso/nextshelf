@@ -79,6 +79,14 @@ export default function ProductForm({
         </div>
       </div>
 
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Tags (comma separated)</label>
+        <Input name="tags" placeholder="load-shedding" defaultValue={product?.tags?.join(', ') ?? ''} />
+        <p className="text-xs text-muted-foreground">
+          Use <code>load-shedding</code> for products that work without mains power. They appear under “Load-shedding ready”.
+        </p>
+      </div>
+
       <div className="flex gap-6 text-sm">
         <label className="flex items-center gap-2">
           <input type="checkbox" name="is_active" defaultChecked={product?.is_active ?? true} />

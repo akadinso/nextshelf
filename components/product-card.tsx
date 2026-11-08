@@ -39,12 +39,11 @@ export default function ProductCard({
       </form>
 
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-white/70">
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-white">
           <ProductImage
             src={product.images[0]}
             alt={product.name}
-            contain
-            className="h-full w-full p-4 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full transition-transform duration-300 group-hover:scale-105"
           />
           {onSale && (
             <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">

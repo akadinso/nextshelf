@@ -13,6 +13,7 @@ export type Product = {
   is_featured: boolean
   rating_avg: number
   rating_count: number
+  tags: string[]
   created_at: string
   // only present when selected with CARD_SELECT
   variants?: { count: number }[]

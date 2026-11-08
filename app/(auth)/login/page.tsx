@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { login } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SITE } from '@/lib/site'
 
 export default async function LoginPage({
   searchParams,
@@ -13,7 +14,7 @@ export default async function LoginPage({
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
       <h1 className="text-2xl font-bold">Welcome back</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Log in to your NextShelf account.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Log in to your {SITE.name} account.</p>
 
       {error && <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {message && <p className="mt-4 rounded-md bg-muted p-3 text-sm">{message}</p>}

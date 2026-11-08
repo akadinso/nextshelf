@@ -23,6 +23,7 @@ function parseProduct(fd: FormData) {
     sku: String(fd.get('sku') ?? '').trim() || null,
     stock_quantity: Math.max(0, parseInt(String(fd.get('stock') ?? '0'), 10) || 0),
     category_id: String(fd.get('category_id') ?? '') || null,
+    tags: String(fd.get('tags') ?? '').split(',').map((t) => slugify(t)).filter(Boolean),
     is_featured: fd.get('is_featured') === 'on',
     is_active: fd.get('is_active') === 'on',
   }

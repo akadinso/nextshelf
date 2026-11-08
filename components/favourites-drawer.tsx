@@ -14,7 +14,7 @@ export default function FavouritesDrawer({ products }: { products: Product[] }) 
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+      <SheetTrigger>
         <button
           aria-label="Open favourites"
           className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"

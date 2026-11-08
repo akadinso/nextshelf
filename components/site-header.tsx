@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Search, Store } from 'lucide-react'
+import { Droplets, Search, Zap } from 'lucide-react'
 import { getProfile, getUser } from '@/lib/auth'
 import { getCart, getFavourites, getTopCategories } from '@/lib/data'
 import { SITE } from '@/lib/site'
@@ -41,7 +41,7 @@ export default async function SiteHeader() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Store className="h-4 w-4" />
+              <Droplets className="h-4 w-4" />
             </span>
             {SITE.name}
           </Link>
@@ -99,6 +99,13 @@ export default async function SiteHeader() {
 
         {/* Category nav */}
         <nav className="mx-auto flex max-w-7xl items-center gap-6 overflow-x-auto whitespace-nowrap px-4 pb-3 text-sm">
+          <Link
+            href={SITE.navHighlight.href}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            <Zap className="h-3.5 w-3.5" />
+            {SITE.navHighlight.label}
+          </Link>
           {categories.map((c) => (
             <Link key={c.id} href={`/products?category=${c.slug}`} className="text-muted-foreground hover:text-foreground">
               {c.name}

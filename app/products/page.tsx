@@ -5,6 +5,7 @@ import FilterDrawer from '@/components/filter-drawer'
 import ProductCard from '@/components/product-card'
 import { createClient } from '@/lib/supabase/server'
 import { CARD_SELECT, getFavouriteIds } from '@/lib/data'
+import { SITE } from '@/lib/site'
 import type { Category, Product } from '@/lib/types'
 
 export default async function ProductsPage({
@@ -24,6 +25,7 @@ export default async function ProductsPage({
   let query = supabase.from('products').select(CARD_SELECT).eq('is_active', true)
 
   if (sp.q) query = query.ilike('name', `%${sp.q}%`)
+  if (sp.tag) query = query.contains('tags', [sp.tag])
 
   const cat = categories.find((c) => c.slug === sp.category)
   if (cat) {
@@ -49,7 +51,7 @@ export default async function ProductsPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="mr-auto text-2xl font-bold">{cat ? cat.name : 'All products'}</h1>
+        <h1 className="mr-auto text-2xl font-bold">{(sp.tag && SITE.tags[sp.tag]) || cat?.name || 'All products'}</h1>
 
         <form action="/products" className="flex gap-2">
           <Input name="q" placeholder="Search products" defaultValue={sp.q} className="w-48 sm:w-64" />

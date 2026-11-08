@@ -1,5 +1,6 @@
 import 'server-only'
 import crypto from 'crypto'
+import { SITE } from '@/lib/site'
 
 const sandbox = process.env.PAYFAST_SANDBOX === 'true'
 const host = sandbox ? 'https://sandbox.payfast.co.za' : 'https://www.payfast.co.za'
@@ -53,7 +54,7 @@ export function buildPayfastUrl(order: {
     ['cell_number', order.phone ?? ''],
     ['m_payment_id', order.id],
     ['amount', (order.total_cents / 100).toFixed(2)],
-    ['item_name', `NextShelf order #${order.order_number}`],
+    ['item_name', `${SITE.name} order #${order.order_number}`],
   ]
 
   const clean = pairs.filter(([, v]) => v !== '')

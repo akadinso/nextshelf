@@ -1,7 +1,13 @@
-// Edit the text of your storefront here.
+// Edit the text of your storefront here. Changing `name` renames the shop everywhere
+// (header, footer, browser tab and the item name shown on the PayFast payment page).
 export const SITE = {
-  name: 'NextShelf',
-  contactEmail: '', // shown in the footer when set, e.g. 'hello@nextshelf.co.za'
+  name: 'ClearCurrent',
+  description: 'Water filters, dispensers and cooling for South African homes.',
+  contactEmail: '', // shown in the footer when set, e.g. 'hello@clearcurrent.co.za'
+
+  // Highlighted link in the category bar, and readable names for product tags
+  navHighlight: { label: 'Load-shedding ready', href: '/products?tag=load-shedding' },
+  tags: { 'load-shedding': 'Load-shedding ready' } as Record<string, string>,
 
   topLinks: [
     { label: 'Track order', href: '/account/orders' },
@@ -9,12 +15,17 @@ export const SITE = {
   ],
 
   hero: {
-    title: 'The Easiest Way to Shop Online',
-    subtitle: 'Curated picks, smart filters and a secure checkout, all in one seamless experience.',
+    title: 'Clean Water. Cool Air. Delivered to Your Door.',
+    subtitle:
+      'Water filters, dispensers and cooling for South African homes, including options that keep working without mains power.',
   },
 
-  // Update the shipping and returns answers to match your real policies.
+  // Update the delivery and returns answers to match your real policies, then add them here.
   faqs: [
+    {
+      q: 'Which products work during load shedding?',
+      a: 'Gravity filters, tap and shower filters, jugs, bottles and hand pumps need no electricity at all. Our rechargeable fans and USB products run from a built-in battery or a power bank. Each product page says how it is powered.',
+    },
     {
       q: 'How do I pay?',
       a: 'Checkout is handled securely by PayFast. You can pay with the options PayFast offers on its payment page, including card and instant EFT.',

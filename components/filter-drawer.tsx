@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 
 type Props = {
   categories: { id: string; name: string; slug: string; parent_id: string | null }[]
-  defaults: { q?: string; category?: string; min?: string; max?: string; sort?: string }
+  defaults: { q?: string; tag?: string; category?: string; min?: string; max?: string; sort?: string }
 }
 
 export default function FilterDrawer({ categories, defaults }: Props) {
@@ -27,7 +27,7 @@ export default function FilterDrawer({ categories, defaults }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+      <SheetTrigger>
         <Button variant="outline" size="sm">
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Filter
@@ -41,6 +41,7 @@ export default function FilterDrawer({ categories, defaults }: Props) {
 
         <form onSubmit={onSubmit} className="space-y-5 px-4">
           <input type="hidden" name="q" value={defaults.q ?? ''} />
+          <input type="hidden" name="tag" value={defaults.tag ?? ''} />
 
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="category">Category</label>

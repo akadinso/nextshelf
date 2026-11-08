@@ -64,18 +64,13 @@ export default async function ProductPage({
         {/* Gallery */}
         <div className="space-y-3">
           <div className="aspect-square overflow-hidden rounded-3xl bg-muted">
-            <ProductImage
-              src={product.images[0]}
-              alt={product.name}
-              contain
-              className="h-full w-full p-8 mix-blend-multiply"
-            />
+            <ProductImage src={product.images[0]} alt={product.name} className="h-full w-full" />
           </div>
           {product.images.length > 1 && (
             <div className="grid grid-cols-5 gap-2">
               {product.images.slice(1).map((src) => (
                 <div key={src} className="aspect-square overflow-hidden rounded-xl bg-muted">
-                  <ProductImage src={src} alt={product.name} contain className="h-full w-full p-2 mix-blend-multiply" />
+                  <ProductImage src={src} alt={product.name} className="h-full w-full" />
                 </div>
               ))}
             </div>
