@@ -1,0 +1,9 @@
+/* NextShelf look: blue primary, soft grey surfaces, rounder corners.
+   Imported AFTER globals.css in layout.tsx so these values win. */
+:root {
+  --primary: oklch(0.57 0.22 262);
+  --primary-foreground: oklch(1 0 0);
+  --ring: oklch(0.57 0.22 262);
+  --muted: oklch(0.965 0.004 260);
+  --radius: 0.875rem;
+}

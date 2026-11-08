@@ -1,36 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NextShelf
 
-## Getting Started
+Next.js (App Router) + Supabase + PayFast. Single-seller ecommerce store.
 
-First, run the development server:
+## Setup
+1. `npx create-next-app@latest nextshelf` (TypeScript, Tailwind, App Router), then `npx shadcn@latest init`
+2. `npx shadcn@latest add button input sheet badge`
+3. `npm i @supabase/supabase-js @supabase/ssr server-only`
+4. Copy this folder's contents over your project (replace `app/layout.tsx`, `app/page.tsx`, `next.config.ts`)
+5. Copy `.env.example` to `.env.local` and fill it in
+6. Supabase SQL editor: run `supabase/migrations/001_schema.sql`, `002_checkout.sql`, then `003_reviews.sql`. Optional sample data: `supabase/seed.sql` (products) and, after you have signed up, `supabase/seed_reviews.sql` (demo reviews, delete before launch)
+7. Supabase Storage: create a **public** bucket named `product-images`
+8. Supabase Auth > URL Configuration: add `http://localhost:3000/auth/callback` (and your live domain) as a redirect URL
+9. `npm run dev`, sign up, then in the SQL editor: `update profiles set role = 'admin' where id = '<your auth user id>';`
+10. Go to `/admin`, add categories, then products
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Notes
+- Webhook testing: PayFast cannot reach localhost. Use ngrok and set `NEXT_PUBLIC_SITE_URL` to the ngrok URL.
+- On Next.js 16, `middleware.ts` still works but shows a deprecation warning. To silence it, rename to `proxy.ts` and rename the exported function `middleware` to `proxy`.
+- Shipping cost lives in `lib/shipping.ts`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Storefront text (hero, FAQ, top bar links, contact email) lives in `lib/site.ts`. Colours live in `app/theme.css`.
