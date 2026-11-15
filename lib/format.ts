@@ -9,4 +9,4 @@ export const slugify = (s: string) =>
 
 // Only allow same-site relative redirects
 export const safeNext = (n: unknown) =>
-  typeof n === 'string' && n.startsWith('/') && !n.startsWith('//') ? n : '/'
+  typeof n === 'string' && /^\/(?![/\\])[^\\\r\n\t]*$/.test(n) ? n : '/'

@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { Droplets, Search, Zap } from 'lucide-react'
+import { Droplets, Search, ShieldAlert, Zap } from 'lucide-react'
 import { getProfile, getUser } from '@/lib/auth'
 import { getCart, getFavourites, getTopCategories } from '@/lib/data'
 import { SITE } from '@/lib/site'
+import { getVerification } from '@/lib/verification'
 import CartDrawer from '@/components/cart-drawer'
 import FavouritesDrawer from '@/components/favourites-drawer'
 
@@ -15,11 +16,25 @@ export default async function SiteHeader() {
     getTopCategories(),
   ])
 
+  const verification = user ? getVerification(user, profile) : null
   const displayName = profile?.full_name || user?.email || ''
   const initial = displayName.trim()[0]?.toUpperCase() ?? '?'
 
   return (
     <header className="sticky top-0 z-40 bg-background">
+      {SITE.requireVerification && verification && !verification.ok && (
+        <div className="bg-amber-50 text-xs text-amber-900">
+          <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2">
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            {verification.emailVerified
+              ? 'Add your name and phone number to check out.'
+              : 'Verify your email to start shopping.'}
+            <Link href="/verify" className="font-semibold underline">
+              Finish now
+            </Link>
+          </div>
+        </div>
+      )}
       {/* Announcement bar */}
       <div className="bg-neutral-950 text-[11px] text-neutral-300">
         <div className="mx-auto flex h-8 max-w-7xl items-center justify-end gap-5 px-4">

@@ -8,7 +8,7 @@ Next.js (App Router) + Supabase + PayFast. Single-seller ecommerce store.
 3. `npm i @supabase/supabase-js @supabase/ssr server-only`
 4. Copy this folder's contents over your project (replace `app/layout.tsx`, `app/page.tsx`, `next.config.ts`)
 5. Copy `.env.example` to `.env.local` and fill it in
-6. Supabase SQL editor: run `supabase/migrations/001_schema.sql`, `002_checkout.sql`, then `003_reviews.sql`, then `004_tags.sql`. Sample catalogue (17 water and cooling products): `supabase/seed.sql` and, after you have signed up, `supabase/seed_reviews.sql` (demo reviews, delete before launch)
+6. Supabase SQL editor: run `supabase/migrations/001_schema.sql`, `002_checkout.sql`, then `003_reviews.sql`, then `004_tags.sql` (optional, the seed adds it anyway), then `005_international.sql` and `006_security.sql`. Sample catalogue (17 water and cooling products): `supabase/seed.sql` and, after you have signed up, `supabase/seed_reviews.sql` (demo reviews, delete before launch)
 7. Supabase Storage: create a **public** bucket named `product-images`
 8. Supabase Auth > URL Configuration: add `http://localhost:3000/auth/callback` (and your live domain) as a redirect URL
 9. `npm run dev`, sign up, then in the SQL editor: `update profiles set role = 'admin' where id = '<your auth user id>';`
@@ -21,3 +21,10 @@ Next.js (App Router) + Supabase + PayFast. Single-seller ecommerce store.
 
 - Storefront text (hero, FAQ, top bar links, contact email) lives in `lib/site.ts`. Colours live in `app/theme.css`.
 - Shop name: change `name` in `lib/site.ts` and it updates everywhere. See `docs/SOURCING.md` for the product list, supplier search terms and compliance notes.
+
+## International orders, address search and verification
+
+- **Countries:** customers can deliver to and bill in any country except the blocked list in `lib/shipping.ts`. Set real courier rates there (`SHIPPING_RATES`). The international rate ships as a placeholder.
+- **Address search (optional):** add `GOOGLE_MAPS_API_KEY` to `.env.local`. In Google Cloud: create a project, enable billing, enable **Places API (New)**, create an API key and restrict it to that one API. Set a daily quota and a budget alert. Without a key the address form still works, just without suggestions.
+- **Verification:** in Supabase go to Authentication, then Sign In / Providers, then Email, and make sure **Confirm email** is ON. If it is off, every account counts as verified and the check cannot work. Customers must also add a name and phone number before they can check out. To switch the rules off, set `requireVerification: false` in `lib/site.ts`.
+- Security: see `docs/SECURITY.md` for what is built in and the Supabase settings to switch on (Confirm email, secure password and email change, two-step verification, leaked password protection).

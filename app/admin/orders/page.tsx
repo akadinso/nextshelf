@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import StatusBadge from '@/components/status-badge'
 import { updateOrderStatus } from '@/app/actions/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getCountryName } from '@/lib/countries'
 import { formatDate, formatZAR } from '@/lib/format'
 import type { Order, OrderItem } from '@/lib/types'
 
@@ -48,8 +49,17 @@ export default async function AdminOrdersPage() {
                   {a.phone ? ` · ${a.phone}` : ''}
                   <br />
                   {a.street}
-                  {a.suburb ? `, ${a.suburb}` : ''}, {a.city}, {a.province} {a.postal_code}
+                  {a.suburb ? `, ${a.suburb}` : ''}, {a.city}
+                  {a.province ? `, ${a.province}` : ''} {a.postal_code}
+                  <br />
+                  <span className="font-medium text-foreground">{getCountryName(a.country)}</span>
                 </p>
+                {o.billing_address && JSON.stringify(o.billing_address) !== JSON.stringify(a) && (
+                  <p className="mt-3 text-muted-foreground">
+                    <span className="font-medium text-foreground">Billing:</span> {o.billing_address.recipient_name},{' '}
+                    {o.billing_address.street}, {o.billing_address.city}, {getCountryName(o.billing_address.country)}
+                  </p>
+                )}
               </details>
 
               {canUpdate && (

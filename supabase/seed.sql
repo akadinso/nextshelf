@@ -1,5 +1,5 @@
 -- ClearCurrent sample catalogue: water filters, dispensers and cooling for South Africa.
--- Run in the Supabase SQL editor AFTER 001, 002, 003 and 004.
+-- Run in the Supabase SQL editor AFTER 001, 002 and 003. (It adds the `tags` column itself if you have not run 004.)
 --
 -- THIS REPLACES THE SAMPLE DATA. It first deletes the earlier sample products and categories
 -- (the clothing/apparel set AND any earlier version of this water set), then loads the catalogue
@@ -11,6 +11,10 @@
 -- real landed cost (supplier price + shipping to SA + payment fees) before you go live.
 -- Images are placeholder photos: replace them with your supplier photos in /admin/products.
 -- Stock numbers are placeholders too. Dropshipped items depend on your supplier's stock.
+
+-- ========== PRE-STEP: tags column (same as 004_tags.sql, safe to repeat) ==========
+alter table products add column if not exists tags text[] not null default '{}';
+create index if not exists products_tags_idx on products using gin (tags);
 
 -- ========== 0. REMOVE EARLIER SAMPLE DATA ==========
 delete from products where sku in (

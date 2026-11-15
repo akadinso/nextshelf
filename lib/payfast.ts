@@ -51,7 +51,6 @@ export function buildPayfastUrl(order: {
     ['name_first', first ?? ''],
     ['name_last', rest.join(' ')],
     ['email_address', order.email],
-    ['cell_number', order.phone ?? ''],
     ['m_payment_id', order.id],
     ['amount', (order.total_cents / 100).toFixed(2)],
     ['item_name', `${SITE.name} order #${order.order_number}`],

@@ -3,6 +3,10 @@
 export const SITE = {
   name: 'ClearCurrent',
   description: 'Water filters, dispensers and cooling for South African homes.',
+  // Customers must confirm their email (and add a name and phone number) before they can shop.
+  requireVerification: true,
+  // Admin accounts must turn on two-step verification before they can open /admin.
+  requireAdminMfa: true,
   contactEmail: '', // shown in the footer when set, e.g. 'hello@clearcurrent.co.za'
 
   // Highlighted link in the category bar, and readable names for product tags

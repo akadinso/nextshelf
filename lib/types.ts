@@ -48,6 +48,7 @@ export type Address = {
   city: string
   province: string
   postal_code: string
+  country: string
   is_default: boolean
 }
 
@@ -60,6 +61,7 @@ export type Order = {
   shipping_cents: number
   total_cents: number
   shipping_address: Record<string, string>
+  billing_address: Record<string, string> | null
   created_at: string
 }
 

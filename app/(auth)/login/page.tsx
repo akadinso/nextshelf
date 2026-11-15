@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { login } from '@/app/actions/auth'
+import { login, resendConfirmation } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SITE } from '@/lib/site'
@@ -7,9 +7,9 @@ import { SITE } from '@/lib/site'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string; next?: string }>
+  searchParams: Promise<{ error?: string; message?: string; next?: string; email?: string }>
 }) {
-  const { error, message, next } = await searchParams
+  const { error, message, next, email } = await searchParams
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
@@ -18,6 +18,16 @@ export default async function LoginPage({
 
       {error && <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {message && <p className="mt-4 rounded-md bg-muted p-3 text-sm">{message}</p>}
+
+      {email && (
+        <form action={resendConfirmation} className="mt-3">
+          <input type="hidden" name="email" value={email} />
+          <input type="hidden" name="returnTo" value="/login" />
+          <Button type="submit" variant="outline" size="sm" className="rounded-full">
+            Resend confirmation email
+          </Button>
+        </form>
+      )}
 
       <form action={login} className="mt-6 space-y-4">
         <input type="hidden" name="next" value={next ?? '/'} />

@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { addAddress, deleteAddress, setDefaultAddress } from '@/app/actions/account'
+import AddAddressForm from '@/components/add-address-form'
+import { deleteAddress, setDefaultAddress } from '@/app/actions/account'
 import { createClient } from '@/lib/supabase/server'
-import { requireUser } from '@/lib/auth'
-import { PROVINCES } from '@/lib/provinces'
+import { getProfile, requireUser } from '@/lib/auth'
+import { getCountryName } from '@/lib/countries'
+import { isPlacesEnabled } from '@/lib/places'
 import type { Address } from '@/lib/types'
 
 export default async function AddressesPage({
@@ -13,6 +14,7 @@ export default async function AddressesPage({
 }) {
   const user = await requireUser('/account/addresses')
   const { error } = await searchParams
+  const profile = await getProfile()
   const supabase = await createClient()
   const { data } = await supabase
     .from('addresses')
@@ -22,8 +24,8 @@ export default async function AddressesPage({
   const addresses = (data ?? []) as Address[]
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">Saved addresses</h1>
+    <div>
+      <h2 className="mb-6 text-2xl font-bold">My address book</h2>
 
       <ul className="space-y-3">
         {addresses.map((a) => (
@@ -42,7 +44,10 @@ export default async function AddressesPage({
                   {a.street}
                   {a.suburb ? `, ${a.suburb}` : ''}
                   <br />
-                  {a.city}, {a.province} {a.postal_code}
+                  {a.city}
+                  {a.province ? `, ${a.province}` : ''} {a.postal_code}
+                  <br />
+                  {getCountryName(a.country)}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -67,35 +72,15 @@ export default async function AddressesPage({
         {addresses.length === 0 && <p className="text-sm text-muted-foreground">No saved addresses yet.</p>}
       </ul>
 
-      <form action={addAddress} className="mt-10 space-y-3">
+      <div className="mt-10 space-y-3">
         <h2 className="font-semibold">Add an address</h2>
         {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input name="label" placeholder="Label (Home, Work…)" />
-          <Input name="recipient_name" placeholder="Full name *" required />
-          <Input name="phone" placeholder="Phone" />
-          <Input name="street" placeholder="Street address *" required />
-          <Input name="suburb" placeholder="Suburb" />
-          <Input name="city" placeholder="City *" required />
-          <select
-            name="province"
-            required
-            defaultValue=""
-            className="h-9 rounded-md border bg-background px-3 text-sm"
-          >
-            <option value="" disabled>
-              Province *
-            </option>
-            {PROVINCES.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-          <Input name="postal_code" placeholder="Postal code *" required />
-        </div>
-        <Button type="submit">Save address</Button>
-      </form>
+        <AddAddressForm
+          placesEnabled={isPlacesEnabled()}
+          defaultName={profile?.full_name ?? ''}
+          defaultPhone={profile?.phone ?? ''}
+        />
+      </div>
     </div>
   )
 }

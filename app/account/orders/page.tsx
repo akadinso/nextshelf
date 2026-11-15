@@ -16,8 +16,8 @@ export default async function OrdersPage() {
   const orders = (data ?? []) as Order[]
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">Order history</h1>
+    <div>
+      <h2 className="mb-6 text-2xl font-bold">My orders</h2>
 
       {orders.length === 0 ? (
         <p className="text-muted-foreground">

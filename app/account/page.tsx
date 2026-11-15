@@ -1,45 +1,75 @@
-import Link from 'next/link'
+import { BadgeCheck, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { logout, updateProfile } from '@/app/actions/auth'
+import { Field, Notice, Section } from '@/components/account/section'
+import { updateProfile } from '@/app/actions/auth'
+import { changeEmail } from '@/app/actions/security'
 import { getProfile, requireUser } from '@/lib/auth'
+import { splitName } from '@/lib/security-checks'
 
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>
+  searchParams: Promise<{ saved?: string; error?: string; message?: string }>
 }) {
   const user = await requireUser('/account')
   const profile = await getProfile()
-  const { saved } = await searchParams
+  const { saved, error, message } = await searchParams
+  const { first, last } = splitName(profile?.full_name)
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
-      <h1 className="text-2xl font-bold">My account</h1>
-      <p className="text-sm text-muted-foreground">{user.email}</p>
+    <div>
+      <h2 className="text-2xl font-bold">My details</h2>
+      <Notice error={error} message={saved ? 'Your details were saved.' : message} />
 
-      <nav className="mt-6 grid gap-2 sm:grid-cols-2">
-        <Link href="/account/orders" className="rounded-lg border p-4 text-sm font-medium hover:bg-muted">
-          Order history
-        </Link>
-        <Link href="/account/addresses" className="rounded-lg border p-4 text-sm font-medium hover:bg-muted">
-          Saved addresses
-        </Link>
-      </nav>
+      <Section
+        title="Personal information"
+        description="Your name and phone number are used for delivery and to help keep your account safe."
+      >
+        <form action={updateProfile} className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="First name">
+              <Input name="first_name" defaultValue={first} required maxLength={50} autoComplete="given-name" />
+            </Field>
+            <Field label="Last name">
+              <Input name="last_name" defaultValue={last} maxLength={50} autoComplete="family-name" />
+            </Field>
+          </div>
+          <Field label="Phone number" hint="Include your country code for international numbers, for example +27 82 123 4567.">
+            <Input name="phone" type="tel" defaultValue={profile?.phone ?? ''} required autoComplete="tel" />
+          </Field>
+          <Button type="submit">Save</Button>
+        </form>
+      </Section>
 
-      <form action={updateProfile} className="mt-8 space-y-4">
-        <h2 className="font-semibold">Profile</h2>
-        {saved && <p className="rounded-md bg-muted p-3 text-sm">Saved.</p>}
-        <Input name="full_name" placeholder="Full name" defaultValue={profile?.full_name ?? ''} />
-        <Input name="phone" type="tel" placeholder="Phone" defaultValue={profile?.phone ?? ''} />
-        <Button type="submit">Save changes</Button>
-      </form>
-
-      <form action={logout} className="mt-10">
-        <Button type="submit" variant="outline">
-          Log out
-        </Button>
-      </form>
+      <Section
+        title="E-mail address"
+        description="We use your email for order updates and sign-in. Changing it needs your current password and a confirmation link."
+      >
+        <div className="mb-5 flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-medium">{user.email}</span>
+          {user.email_confirmed_at ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+              <BadgeCheck className="h-3.5 w-3.5" /> Verified
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+              <TriangleAlert className="h-3.5 w-3.5" /> Not verified
+            </span>
+          )}
+        </div>
+        <form action={changeEmail} className="space-y-4">
+          <Field label="New email address">
+            <Input name="new_email" type="email" required autoComplete="email" />
+          </Field>
+          <Field label="Current password" hint="We ask for this to make sure it is really you.">
+            <Input name="current_password" type="password" required autoComplete="current-password" />
+          </Field>
+          <Button type="submit" variant="outline">
+            Change email
+          </Button>
+        </form>
+      </Section>
     </div>
   )
 }

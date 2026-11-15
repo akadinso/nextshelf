@@ -5,11 +5,15 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { safeNext } from '@/lib/format'
+import { SITE } from '@/lib/site'
 
 export async function addToCart(formData: FormData) {
   const back = safeNext(formData.get('redirectTo'))
   const user = await getUser()
   if (!user) redirect(`/login?next=${encodeURIComponent(back)}`)
+  if (SITE.requireVerification && !user.email_confirmed_at) {
+    redirect(`/verify?next=${encodeURIComponent(back)}`)
+  }
 
   const supabase = await createClient()
   const productId = String(formData.get('productId') ?? '')

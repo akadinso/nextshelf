@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/status-badge'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
+import { getCountryName } from '@/lib/countries'
 import { formatDate, formatZAR } from '@/lib/format'
 import type { Order, OrderItem } from '@/lib/types'
 
@@ -23,15 +24,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const { data: itemData } = await supabase.from('order_items').select('*').eq('order_id', id)
   const items = (itemData ?? []) as OrderItem[]
   const a = order.shipping_address
+  const b = order.billing_address
+  const sameAsDelivery = !b || JSON.stringify(b) === JSON.stringify(a)
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div>
       <Link href="/account/orders" className="text-sm text-muted-foreground hover:underline">
         ← All orders
       </Link>
 
       <div className="mt-2 flex items-center gap-3">
-        <h1 className="text-2xl font-bold">Order #{order.order_number}</h1>
+        <h2 className="text-2xl font-bold">Order #{order.order_number}</h2>
         <StatusBadge status={order.status} />
       </div>
       <p className="text-sm text-muted-foreground">Placed {formatDate(order.created_at)}</p>
@@ -74,8 +77,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {a.street}
           {a.suburb ? `, ${a.suburb}` : ''}
           <br />
-          {a.city}, {a.province} {a.postal_code}
+          {a.city}
+          {a.province ? `, ${a.province}` : ''} {a.postal_code}
+          <br />
+          {getCountryName(a.country)}
         </p>
+
+        {!sameAsDelivery && b && (
+          <>
+            <h2 className="mb-1 mt-5 font-semibold">Billing address</h2>
+            <p className="text-muted-foreground">
+              {b.recipient_name}
+              <br />
+              {b.street}
+              {b.suburb ? `, ${b.suburb}` : ''}
+              <br />
+              {b.city}
+              {b.province ? `, ${b.province}` : ''} {b.postal_code}
+              <br />
+              {getCountryName(b.country)}
+            </p>
+          </>
+        )}
       </div>
     </div>
   )

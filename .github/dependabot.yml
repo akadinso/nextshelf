@@ -1,0 +1,8 @@
+# NSA mitigation #1: update software promptly. This opens weekly pull requests for outdated or vulnerable packages.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

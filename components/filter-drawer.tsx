@@ -27,7 +27,7 @@ export default function FilterDrawer({ categories, defaults }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger>
+      <SheetTrigger asChild>
         <Button variant="outline" size="sm">
           <SlidersHorizontal className="mr-2 h-4 w-4" />
           Filter

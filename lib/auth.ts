@@ -2,6 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { SITE } from '@/lib/site'
 
 export type Profile = {
   full_name: string | null
@@ -30,9 +31,22 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return (data as Profile | null) ?? null
 })
 
+// Authenticator assurance level: "aal2" means the session passed two-step verification
+export const getAal = cache(async () => {
+  const supabase = await createClient()
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  return data
+})
+
 export async function requireUser(next = '/') {
   const user = await getUser()
   if (!user) redirect(`/login?next=${encodeURIComponent(next)}`)
+
+  // A customer who turned on two-step verification must have completed it in this session
+  const aal = await getAal()
+  if (aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+    redirect(`/login/mfa?next=${encodeURIComponent(next)}`)
+  }
   return user
 }
 
@@ -41,5 +55,12 @@ export async function requireAdmin() {
   const user = await requireUser('/admin')
   const profile = await getProfile()
   if (profile?.role !== 'admin') redirect('/')
+
+  if (SITE.requireAdminMfa && (await getAal())?.currentLevel !== 'aal2') {
+    redirect(
+      '/account/security?error=' +
+        encodeURIComponent('Admin accounts must turn on two-step verification before using the admin area.')
+    )
+  }
   return user
 }
