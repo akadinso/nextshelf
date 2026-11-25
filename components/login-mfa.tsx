@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { sendLoginSmsCode, verifyLoginMfa } from "@/app/actions/security";
 
 type LoginMfaFormProps = {
@@ -59,13 +57,26 @@ export function LoginMfaForm({
     }
   }
 
+  const input =
+    "w-full rounded-full border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200";
+  const primary =
+    "w-full rounded-full bg-blue-600 py-2.5 font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
-    <div className="mt-6 space-y-5">
+    <div className="mt-5">
+      <p className="text-sm text-gray-500">
+        {method === "app"
+          ? "Enter the 6-digit code from your authenticator app to finish signing in."
+          : smsSent
+            ? `Enter the 6-digit code we sent to ${maskedPhone}.`
+            : `We will send a 6-digit code to ${maskedPhone}.`}
+      </p>
+
       {showMethodTabs && (
         <div
           role="tablist"
           aria-label="Verification method"
-          className="grid grid-cols-2 rounded-lg bg-muted p-1 text-sm"
+          className="mt-5 grid grid-cols-2 rounded-full bg-gray-100 p-1 text-sm"
         >
           {(
             [
@@ -79,10 +90,10 @@ export function LoginMfaForm({
               role="tab"
               aria-selected={method === id}
               onClick={() => switchMethod(id)}
-              className={`rounded-md py-1.5 font-medium transition ${
+              className={`rounded-full py-1.5 font-medium transition ${
                 method === id
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               {label}
@@ -91,77 +102,70 @@ export function LoginMfaForm({
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        {method === "app"
-          ? "Enter the 6-digit code from your authenticator app to finish signing in."
-          : smsSent
-            ? `Enter the 6-digit code we sent to ${maskedPhone}.`
-            : `We will send a 6-digit code to ${maskedPhone}.`}
-      </p>
-
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      )}
-
-      {method === "sms" && !smsSent ? (
-        <Button
-          type="button"
-          className="w-full"
-          disabled={pending}
-          onClick={triggerSmsSend}
-        >
-          {pending ? "Sending code…" : "Send text message code"}
-        </Button>
-      ) : (
-        <form action={verifyLoginMfa} className="space-y-4">
-          <input type="hidden" name="next" value={next} />
-          <input type="hidden" name="method" value={method} />
-          {method === "sms" && (
-            <input type="hidden" name="challengeId" value={challengeId} />
-          )}
-
-          <Input
-            name="code"
-            value={code}
-            onChange={(e) =>
-              setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-            }
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="123456"
-            maxLength={6}
-            className="tracking-widest"
-            required
-            autoFocus
-          />
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={code.length !== 6 || pending}
+      <div className="mt-5 space-y-3">
+        {method === "sms" && !smsSent ? (
+          <button
+            type="button"
+            className={primary}
+            disabled={pending}
+            onClick={triggerSmsSend}
           >
-            Verify
-          </Button>
+            {pending ? "Sending…" : "Send code"}
+          </button>
+        ) : (
+          <form action={verifyLoginMfa} className="space-y-3">
+            <input type="hidden" name="next" value={next} />
+            <input type="hidden" name="method" value={method} />
+            {method === "sms" && (
+              <input type="hidden" name="challengeId" value={challengeId} />
+            )}
 
-          {method === "sms" && (
-            <div className="flex justify-end text-xs">
-              <button
-                type="button"
-                className="text-primary hover:underline disabled:text-muted-foreground disabled:no-underline"
-                disabled={cooldown > 0 || pending}
-                onClick={triggerSmsSend}
-              >
-                {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
-              </button>
-            </div>
-          )}
-        </form>
-      )}
+            <input
+              type="text"
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="123456"
+              value={code}
+              onChange={(e) =>
+                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              className={`${input} tracking-widest`}
+              aria-label="6-digit verification code"
+              required
+              autoFocus
+            />
+
+            <button
+              type="submit"
+              className={primary}
+              disabled={code.length !== 6 || pending}
+            >
+              Verify
+            </button>
+          </form>
+        )}
+
+        {method === "sms" && smsSent && (
+          <div className="flex justify-end text-sm">
+            <button
+              type="button"
+              className="text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+              disabled={cooldown > 0 || pending}
+              onClick={triggerSmsSend}
+            >
+              {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

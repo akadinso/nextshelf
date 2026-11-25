@@ -29,9 +29,10 @@ export default async function LoginMfaPage({
   const supabase = await createClient();
   const { data: factors } = await supabase.auth.mfa.listFactors();
   const hasTotp = Boolean(factors?.totp?.length);
-  const maskedPhone = maskPhone(
-    (factors?.phone?.[0] as { phone?: string } | undefined)?.phone,
-  );
+  const phoneFactor = factors?.phone?.[0] as
+    | { phone?: string | null }
+    | undefined;
+  const maskedPhone = maskPhone(phoneFactor?.phone ?? user.phone);
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
