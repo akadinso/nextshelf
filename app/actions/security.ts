@@ -10,6 +10,11 @@ import { SITE } from '@/lib/site'
 import { isEmail, passwordProblem } from '@/lib/security-checks'
 import { logSecurityEvent, MAX_FAILURES, recentFailures, verifyPassword } from '@/lib/security'
 
+type Fail = { ok: false; error: string }
+
+const UUID_RE = /^[0-9a-f-]{36}$/i
+const E164_RE = /^\+[1-9]\d{7,14}$/
+
 function back(path: string, kind: 'error' | 'message', text: string): never {
   redirect(`${path}?${kind}=${encodeURIComponent(text)}`)
 }
@@ -42,7 +47,7 @@ export async function changePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password: next })
   if (error) back(path, 'error', error.message)
 
-  await supabase.auth.signOut({ scope: 'others' }) // anyone else holding a session is signed out
+  await supabase.auth.signOut({ scope: 'others' })
   await logSecurityEvent(user.id, 'password_changed')
   back(path, 'message', 'Password updated. Your other devices have been signed out.')
 }
@@ -58,7 +63,10 @@ export async function changeEmail(formData: FormData) {
 
   const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
   const supabase = await createClient()
-  const { error } = await supabase.auth.updateUser({ email: newEmail }, { emailRedirectTo: `${origin}/auth/callback` })
+  const { error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: `${origin}/auth/callback` },
+  )
   if (error) back(path, 'error', error.message)
 
   await logSecurityEvent(user.id, 'email_change_requested')
@@ -73,17 +81,20 @@ export async function signOutOtherDevices() {
   back('/account/security', 'message', 'All your other devices have been signed out.')
 }
 
-// ---------- two-step verification (authenticator app) ----------
-type Fail = { ok: false; error: string }
+// ---------- two-step verification (authenticator app & SMS) ----------
 
-export async function startMfaEnrollment(): Promise<{ ok: true; factorId: string; qr: string; secret: string } | Fail> {
+export async function startMfaEnrollment(): Promise<
+  { ok: true; factorId: string; qr: string; secret: string } | Fail
+> {
   await requireUser('/account/security')
   const supabase = await createClient()
 
-  // clear abandoned set-ups so the customer can simply try again
+  // Clear abandoned unverified TOTP set-ups so the user can retry cleanly
   const { data: existing } = await supabase.auth.mfa.listFactors()
   for (const f of existing?.all ?? []) {
-    if (f.factor_type === 'totp' && f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id })
+    if (f.factor_type === 'totp' && f.status === 'unverified') {
+      await supabase.auth.mfa.unenroll({ factorId: f.id })
+    }
   }
 
   const { data, error } = await supabase.auth.mfa.enroll({
@@ -91,14 +102,16 @@ export async function startMfaEnrollment(): Promise<{ ok: true; factorId: string
     issuer: SITE.name,
     friendlyName: `Authenticator ${Date.now()}`,
   })
-  if (error || !data) return { ok: false, error: error?.message ?? 'Could not start set-up. Please try again.' }
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? 'Could not start set-up. Please try again.' }
+  }
   return { ok: true, factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret }
 }
 
 export async function confirmMfaEnrollment(factorId: string, code: string): Promise<{ ok: true } | Fail> {
   const user = await requireUser('/account/security')
-  const clean = String(code).replace(/\s/g, '')
-  if (!/^[0-9a-f-]{36}$/i.test(factorId) || !/^\d{6}$/.test(clean)) {
+  const clean = String(code).replace(/\D/g, '')
+  if (!UUID_RE.test(factorId) || !/^\d{6}$/.test(clean)) {
     return { ok: false, error: 'Enter the 6-digit code from your authenticator app.' }
   }
   if ((await recentFailures(user.id, ['mfa_failed'])) >= MAX_FAILURES) {
@@ -117,9 +130,76 @@ export async function confirmMfaEnrollment(factorId: string, code: string): Prom
   return { ok: true }
 }
 
+export async function startPhoneMfaEnrollment(
+  phone: string,
+): Promise<{ ok: true; factorId: string; challengeId: string } | Fail> {
+  const user = await requireUser('/account/security')
+  const cleanPhone = String(phone).trim()
+  if (!E164_RE.test(cleanPhone)) {
+    return { ok: false, error: 'Enter a valid mobile number with country code (e.g. +27821234567).' }
+  }
+  if ((await recentFailures(user.id, ['mfa_failed'])) >= MAX_FAILURES) {
+    return { ok: false, error: 'Too many attempts. Please wait 15 minutes and try again.' }
+  }
+
+  const supabase = await createClient()
+
+  // Clear abandoned unverified phone factors
+  const { data: existing } = await supabase.auth.mfa.listFactors()
+  for (const f of existing?.all ?? []) {
+    if (f.factor_type === 'phone' && f.status === 'unverified') {
+      await supabase.auth.mfa.unenroll({ factorId: f.id })
+    }
+  }
+
+  const { data: enrolled, error: enrollError } = await supabase.auth.mfa.enroll({
+    factorType: 'phone',
+    phone: cleanPhone,
+    friendlyName: `Phone ${cleanPhone}`,
+  })
+  if (enrollError || !enrolled) {
+    return { ok: false, error: enrollError?.message ?? 'Could not register that phone number.' }
+  }
+
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+    factorId: enrolled.id,
+  })
+  if (challengeError || !challenge) {
+    return { ok: false, error: challengeError?.message ?? 'Could not send verification SMS.' }
+  }
+
+  return { ok: true, factorId: enrolled.id, challengeId: challenge.id }
+}
+
+export async function confirmPhoneMfaEnrollment(
+  factorId: string,
+  challengeId: string,
+  code: string,
+): Promise<{ ok: true } | Fail> {
+  const user = await requireUser('/account/security')
+  const clean = String(code).replace(/\D/g, '')
+  if (!UUID_RE.test(factorId) || !UUID_RE.test(challengeId) || !/^\d{6}$/.test(clean)) {
+    return { ok: false, error: 'Enter the 6-digit code sent to your phone.' }
+  }
+  if ((await recentFailures(user.id, ['mfa_failed'])) >= MAX_FAILURES) {
+    return { ok: false, error: 'Too many wrong codes. Please wait 15 minutes and try again.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code: clean })
+  if (error) {
+    await logSecurityEvent(user.id, 'mfa_failed')
+    return { ok: false, error: 'That code is not correct. Please check the SMS and try again.' }
+  }
+
+  await logSecurityEvent(user.id, 'mfa_phone_enabled')
+  revalidatePath('/account/security')
+  return { ok: true }
+}
+
 export async function disableMfa(factorId: string): Promise<{ ok: true } | Fail> {
-  const user = await requireUser('/account/security') // already requires a two-step session
-  if (!/^[0-9a-f-]{36}$/i.test(factorId)) return { ok: false, error: 'Something went wrong.' }
+  const user = await requireUser('/account/security')
+  if (!UUID_RE.test(factorId)) return { ok: false, error: 'Something went wrong.' }
   const supabase = await createClient()
   const { error } = await supabase.auth.mfa.unenroll({ factorId })
   if (error) return { ok: false, error: error.message }
@@ -128,29 +208,78 @@ export async function disableMfa(factorId: string): Promise<{ ok: true } | Fail>
   return { ok: true }
 }
 
-// Second step of signing in, for customers who turned two-step verification on
+export async function sendLoginSmsCode(): Promise<
+  { ok: true; challengeId: string; factorId: string } | Fail
+> {
+  const user = await getUser()
+  if (!user) return { ok: false, error: 'Your session expired. Please sign in again.' }
+
+  if ((await recentFailures(user.id, ['mfa_failed'])) >= MAX_FAILURES) {
+    return { ok: false, error: 'Too many attempts. Please wait 15 minutes and try again.' }
+  }
+
+  const supabase = await createClient()
+  const { data: factors } = await supabase.auth.mfa.listFactors()
+  const phoneFactor = factors?.phone?.[0]
+  if (!phoneFactor) {
+    return { ok: false, error: 'No verified phone number is set up on this account.' }
+  }
+
+  const { data, error } = await supabase.auth.mfa.challenge({ factorId: phoneFactor.id })
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? 'Could not send the SMS code. Try again shortly.' }
+  }
+
+  return { ok: true, challengeId: data.id, factorId: phoneFactor.id }
+}
+
 export async function verifyLoginMfa(formData: FormData) {
   const user = await getUser()
   if (!user) redirect('/login')
   const next = safeNext(formData.get('next'))
+  const method = formData.get('method') === 'sms' ? 'sms' : 'app'
   const here = `/login/mfa?next=${encodeURIComponent(next)}`
 
   if ((await recentFailures(user.id, ['mfa_failed'])) >= MAX_FAILURES) {
     redirect(`${here}&error=${encodeURIComponent('Too many wrong codes. Please wait 15 minutes and try again.')}`)
   }
 
+  const code = String(formData.get('code') ?? '').replace(/\D/g, '')
+  if (!/^\d{6}$/.test(code)) {
+    redirect(`${here}&error=${encodeURIComponent('Enter the 6-digit verification code.')}`)
+  }
+
   const supabase = await createClient()
   const { data: factors } = await supabase.auth.mfa.listFactors()
-  const factor = factors?.totp?.[0] // verified authenticator-app factors only
-  if (!factor) redirect(next)
 
-  const code = String(formData.get('code') ?? '').replace(/\s/g, '')
-  if (!/^\d{6}$/.test(code)) redirect(`${here}&error=${encodeURIComponent('Enter the 6-digit code from your app.')}`)
+  if (method === 'sms') {
+    const phoneFactor = factors?.phone?.[0]
+    const challengeId = String(formData.get('challengeId') ?? '')
+    if (!phoneFactor || !UUID_RE.test(challengeId)) {
+      redirect(`${here}&error=${encodeURIComponent('Request a new text message code and try again.')}`)
+    }
 
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code })
-  if (error) {
-    await logSecurityEvent(user.id, 'mfa_failed')
-    redirect(`${here}&error=${encodeURIComponent('That code is not correct. Please try again.')}`)
+    const { error } = await supabase.auth.mfa.verify({
+      factorId: phoneFactor.id,
+      challengeId,
+      code,
+    })
+    if (error) {
+      await logSecurityEvent(user.id, 'mfa_failed')
+      redirect(`${here}&error=${encodeURIComponent('That code is not correct. Please try again.')}`)
+    }
+  } else {
+    const totpFactor = factors?.totp?.[0]
+    if (!totpFactor) redirect(next)
+
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: totpFactor.id,
+      code,
+    })
+    if (error) {
+      await logSecurityEvent(user.id, 'mfa_failed')
+      redirect(`${here}&error=${encodeURIComponent('That code is not correct. Please try again.')}`)
+    }
   }
 
   await logSecurityEvent(user.id, 'login')
