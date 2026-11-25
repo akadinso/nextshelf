@@ -11,10 +11,10 @@ export default function Hero({ image, alt }: { image?: string; alt?: string }) {
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl">{SITE.hero.title}</h1>
           <p className="mt-4 max-w-md text-muted-foreground">{SITE.hero.subtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="rounded-full px-6">
+            <Button  size="lg" className="rounded-full px-6">
               <Link href="/products">Browse products</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full bg-background px-6">
+            <Button  size="lg" variant="outline" className="rounded-full bg-background px-6">
               <Link href={SITE.navHighlight.href}>{SITE.navHighlight.label}</Link>
             </Button>
           </div>

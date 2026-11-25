@@ -15,7 +15,7 @@ export default async function AdminProductsPage() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Products ({products.length})</h1>
-        <Button asChild>
+        <Button>
           <Link href="/admin/products/new">Add product</Link>
         </Button>
       </div>

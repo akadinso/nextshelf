@@ -17,7 +17,7 @@ export default function CartDrawer({ items }: { items: CartItem[] }) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+      <SheetTrigger >
         <button
           aria-label="Open cart"
           className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
@@ -92,7 +92,7 @@ export default function CartDrawer({ items }: { items: CartItem[] }) {
                 <span>Subtotal</span>
                 <span>{formatZAR(cartSubtotalCents(items))}</span>
               </div>
-              <Button asChild className="w-full">
+              <Button className="w-full">
                 <Link href="/checkout" onClick={() => setOpen(false)}>
                   Checkout
                 </Link>

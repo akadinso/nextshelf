@@ -35,7 +35,7 @@ export default async function CancelledPage({
       ) : (
         <>
           <p className="mt-2 text-muted-foreground">No payment was taken.</p>
-          <Button asChild className="mt-8">
+          <Button className="mt-8">
             <Link href="/products">Back to the shop</Link>
           </Button>
         </>

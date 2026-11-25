@@ -47,10 +47,10 @@ export default async function SuccessPage({
       )}
 
       <div className="mt-8 flex justify-center gap-3">
-        <Button asChild>
+        <Button >
           <Link href="/account/orders">View my orders</Link>
         </Button>
-        <Button asChild variant="outline">
+        <Button  variant="outline">
           <Link href="/products">Keep shopping</Link>
         </Button>
       </div>
