@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { sendLoginSmsCode, verifyLoginMfa } from "@/app/actions/security";
 
 type LoginMfaFormProps = {
@@ -26,6 +26,7 @@ export function LoginMfaForm({
   const [error, setError] = useState(initialError ?? "");
   const [cooldown, setCooldown] = useState(0);
   const [pending, startTransition] = useTransition();
+  const autoSentRef = useRef(false);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -47,6 +48,14 @@ export function LoginMfaForm({
       setCooldown(30);
     });
   }
+
+  useEffect(() => {
+    if (!hasTotp && canUseSms && !autoSentRef.current) {
+      autoSentRef.current = true;
+      triggerSmsSend();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTotp, canUseSms]);
 
   function switchMethod(nextMethod: "app" | "sms") {
     setMethod(nextMethod);
